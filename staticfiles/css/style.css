@@ -37,7 +37,7 @@ body {
     border-bottom: 1px solid var(--cor-borda);
 }
 
-.logo-code-desk {
+.logo-code-analyzer {
     font-size: 1.5rem;
     font-weight: 600;
     color: var(--cor-azul);
@@ -63,8 +63,8 @@ body {
     padding: 1.5rem 1rem;
     display: flex;
     flex-direction: column;
-    height: 100%;     
-    min-height: 0;      
+    height: 100%;
+    min-height: 0;
     overflow: hidden;
 }
 
@@ -103,6 +103,45 @@ body {
     border-left-color: var(--cor-azul);
 }
 
+/* ===== PASTAS DE TURMAS ===== */
+.grupo-turma {
+    margin-top: 15px;
+}
+
+.pasta-turma {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 500;
+    font-size: 1.05rem;
+    color: var(--cor-texto-primario);
+    padding: 0.5rem 0.4rem;
+    margin-bottom: 5px;
+    border-bottom: 1px solid var(--cor-borda);
+    padding-bottom: 3px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.pasta-turma:hover {
+    color: var(--cor-azul);
+    background-color: var(--cor-fundo-terciario);
+}
+
+.grupo-turma.aberto>.pasta-turma .seta-pasta {
+    transform: rotate(90deg);
+}
+
+.conteudo-turma {
+    display: none;
+    padding-left: 0.5rem;
+}
+
+.grupo-turma.aberto>.conteudo-turma {
+    display: block;
+}
+
+/* ===== PASTAS DE ALUNOS ===== */
 .grupo-aluno {
     margin-top: 15px;
 }
@@ -245,6 +284,13 @@ body {
     font-size: 0.9rem;
     color: var(--cor-texto-primario);
     background-color: var(--cor-fundo-primario);
+    tab-size: 4;
+}
+
+.conteudo-codigo pre,
+.conteudo-codigo code {
+    margin: 4px !important;
+    padding: 4px !important;
 }
 
 .linha-codigo {

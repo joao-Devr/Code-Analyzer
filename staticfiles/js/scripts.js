@@ -80,6 +80,17 @@ function ativarPastasDeAlunos() {
     });
 }
 
+function ativarPastasDeTurmas() {
+    document.querySelectorAll('.pasta-turma').forEach(pasta => {
+        pasta.addEventListener('click', () => {
+            const grupo = pasta.closest('.grupo-turma');
+            if (grupo) {
+                grupo.classList.toggle('aberto');
+            }
+        });
+    });
+}
+
 function ativarSelecaoDeSubmissoes() {
     // 1. Carrega os gabaritos silenciosamente do HTML
     let gabaritos = {};
@@ -104,14 +115,18 @@ function ativarSelecaoDeSubmissoes() {
             const justificativa = item.dataset.justificativa || '';
             const problema = item.dataset.problema || 'Problema não identificado';
             
+            // Pega a extensão para a cor correta do código (ex: .py, .js, .c, .cpp, .h, .java)
+            const arquivo = item.dataset.arquivo || '';
+            const extensao = arquivo.split('.').pop().toLowerCase();
+            const mapaLinguagens = { 'py': 'python', 'js': 'javascript', 'c': 'c', 'cpp': 'cpp', 'h': 'c', 'java': 'java' };
+            const classeLinguagem = `language-${mapaLinguagens[extensao] || extensao}`;
+
             // 3. Renderiza e Colore o CÓDIGO DO ALUNO
             const painelCodigo = document.getElementById('codigo-aluno');
             if (painelCodigo) {
-                // Insere o texto puro
                 painelCodigo.textContent = codigo;
-                // Remove a marcação de 'já colorido' para forçar o JS a pintar de novo
+                painelCodigo.className = classeLinguagem;
                 delete painelCodigo.dataset.highlighted; 
-                // Manda o Highlight.js agir neste elemento
                 hljs.highlightElement(painelCodigo);
             }
 
@@ -119,11 +134,9 @@ function ativarSelecaoDeSubmissoes() {
             const painelGabarito = document.getElementById('codigo-gabarito');
             if (painelGabarito) {
                 const gabaritoCodigo = gabaritos[questao] || `// Gabarito não encontrado para a Questão ${questao}.`;
-                // Insere o texto puro
                 painelGabarito.textContent = gabaritoCodigo;
-                // Remove a marcação para pintar de novo
+                painelGabarito.className = classeLinguagem;
                 delete painelGabarito.dataset.highlighted;
-                // Colore o gabarito
                 hljs.highlightElement(painelGabarito);
             }
 
@@ -274,5 +287,6 @@ function configurarBotoesNavegacao() {
 document.addEventListener('DOMContentLoaded', function () {
     ativarSelecaoDeSubmissoes();
     ativarPastasDeAlunos();
+    ativarPastasDeTurmas();
     configurarBotoesNavegacao();
 }); 

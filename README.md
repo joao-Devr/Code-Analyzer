@@ -1,6 +1,6 @@
-# 📚 Code Desk (CodeGrader)
+# Code-Analyzer
 
-**Code Desk** é uma bancada web de avaliação de código, pensada para professores corrigirem submissões de exercícios de programação. A ferramenta permite carregar um lote de submissões em `.zip`, visualizar o código de cada aluno lado a lado com o gabarito, registrar alertas/observações e consolidar uma nota final por questão.
+**Code-Analyzer** é uma bancada web de avaliação de código, pensada para professores corrigirem submissões de exercícios de programação. A ferramenta permite carregar um lote de submissões em `.zip`, visualizar o código de cada aluno lado a lado com o gabarito, registrar alertas/observações e consolidar uma nota final por questão.
 
 > Projeto acadêmico em desenvolvimento, construído com Django.
 
@@ -38,14 +38,14 @@
 ## 📁 Estrutura do projeto
 
 ```
-Code-Desk/
+Code-Analyzer/
 ├── manage.py
 ├── requirements.txt
 ├── db.sqlite3
 ├── mysite/                 # Configurações do projeto Django (settings, urls, wsgi/asgi)
-├── CodeDesk/                # App principal: upload/parser de zips, painel de correção
+├── code_analyzer/           # App principal: upload/parser de zips, painel de correção
 │   ├── views.py             # Parser de cabeçalho, validações e processamento do .zip
-│   └── templates/CodeDesk.html
+│   └── templates/code_analyzer.html
 ├── usuario/                  # App de autenticação: login, cadastro e logout
 │   ├── views.py
 │   └── templates/
@@ -71,7 +71,7 @@ Code-Desk/
 
 ```bash
 git clone https://github.com/joao-Devr/Code-Desk.git
-cd Code-Desk
+cd Code-Analyzer
 ```
 
 ### 2. Criar e ativar um ambiente virtual
@@ -126,7 +126,7 @@ http://127.0.0.1:8000/
 
 - `/` — Login (`usuario`)
 - `/cadastro/` — Cadastro de novo professor
-- `/CodeDesk/` — Painel principal de correção (requer login)
+- `/Code-Analyzer/` — Painel principal de correção (requer login)
 - `/admin/` — Administração do Django
 
 ---
