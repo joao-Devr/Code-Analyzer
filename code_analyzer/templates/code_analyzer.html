@@ -5,10 +5,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Code Desk - Correção de Código</title>
+    <title>Code-Analyzer - Correção de Código</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <!-- <link rel="stylesheet" href="{% static 'css/a11y-dark.css' %}"> -->
-     
+
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
@@ -18,7 +18,7 @@
 <body>
     <!-- HEADER -->
     <header class="cabecalho">
-        <div class="logo-code-desk">💻 Code Desk</div>
+        <div class="logo-code-analyzer">💻 Code-Analyzer</div>
         <div class="botoes-autenticacao">
             <button class="botao botao-secundario" id="botao-sobre">Sobre</button>
             {% if user.is_authenticated %}
@@ -62,10 +62,10 @@
                         {% csrf_token %}
 
                         <div class="grupo-formulario" style="margin-bottom: 0;">
-                            <label for="arquivo_zip" class="rotulo-campo">Arquivo  da prova:</label>
+                            <label for="arquivo_zip" class="rotulo-campo">Arquivo da prova:</label>
 
-                            <input type="file" name="arquivo_zip" id="arquivo_zip" accept=".zip, .tgz, .tar.gz"
-                             required class="campo-entrada" style="padding: 0.5rem; cursor: pointer;">
+                            <input type="file" name="arquivo_zip" id="arquivo_zip" accept=".zip, .tgz, .tar.gz" required
+                                class="campo-entrada" style="padding: 0.5rem; cursor: pointer;">
                         </div>
 
                         <!-- O botão principal azul do site -->
@@ -80,52 +80,58 @@
                     <div style="margin-bottom: 15px;">
 
                         <!-- O link redireciona para a mesma página via GET, limpando o POST -->
-                        <a href="{% url 'CodeDesk:codedesk' %}" class="botao botao-secundario"
+                        <a href="{% url 'code_analyzer:code_analyzer' %}" class="botao botao-secundario"
                             style="font-size: 0.8rem; width: 100%; display: block; text-align: center; box-sizing: border-box;">Carregar
                             nova prova</a>
                     </div>
 
-                    <!-- Loop nos alunos carregados da memória (id_curto -> dados do aluno) -->
-                    {% for id_aluno, dados_aluno in alunos.items %}
+                    <!-- Loop nas Turmas -->
+                    {% for nome_turma, alunos_da_turma in alunos.items %}
+                    <div class="grupo-turma">
 
-                    <!-- Grupo do aluno: pasta + arquivos (começa fechado) -->
-                    <div class="grupo-aluno">
-
-                        <!-- Cabeçalho da "pasta" — clicável para abrir/fechar -->
-                        <div class="pasta-aluno" data-aluno-toggle>
+                        <!-- Cabeçalho da Turma (Clicável) -->
+                        <div class="pasta-turma" data-turma-toggle>
                             <span class="icone-pasta">📁</span>
-                            <span class="nome-pasta">{{ dados_aluno.nome }}</span>
+                            <span class="nome-pasta">Turma: {{ nome_turma }}</span>
                             <span class="seta-pasta">▶</span>
                         </div>
 
-                        <!-- Arquivos desse aluno — escondidos até a pasta ser aberta -->
-                        <div class="arquivos-aluno">
-                            {% for item in dados_aluno.arquivos %}
-
-                            <!-- Atributos data-* para o JS ler ao clicar (código já escapado pelo Django) -->
-                            <div class="item-submissao"
-                                data-id-submissao="sub-{{ id_aluno }}-{{ item.questao }}-{{ item.tentativa }}"
-                                data-questao="{{ item.questao }}" data-aluno="{{ dados_aluno.nome|default:'—' }}"
-                                data-matricula="{{ dados_aluno.matricula|default:'Sem matrícula' }}"
-                                data-turma="{{ dados_aluno.turma|default:'Sem turma' }}"
-                                data-nota-final-aluno="{{ dados_aluno.nota_final }}"
-                                data-codigo="{{ item.codigo|escape }}" data-nota-dredd="{{ item.nota_dredd|escape }}"
-                                data-justificativa="{{ item.justificativa|escape }}"
-                                data-problema="{{ item.problema|escape }}">
-
-                                <div class="nome-arquivo">📄 Questão {{ item.questao }} · Tentativa {{ item.tentativa }}
+                        <!-- Conteúdo da Turma (Alunos escondidos até abrir) -->
+                        <div class="conteudo-turma">
+                            {% for id_aluno, dados_aluno in alunos_da_turma.items %}
+                            <div class="grupo-aluno" style="margin-top: 5px;">
+                                <div class="pasta-aluno" data-aluno-toggle>
+                                    <span class="icone-pasta">🗂️</span>
+                                    <span class="nome-pasta">{{ dados_aluno.nome }}</span>
+                                    <span class="seta-pasta">▶</span>
                                 </div>
-                                <div style="font-size: 0.8rem; color: var(--cor-texto-terciario);">
-                                    {% if item.nota_dredd %}nota: {{ item.nota_dredd }}{% else %}sem nota{% endif %}
+
+                                <div class="arquivos-aluno">
+                                    {% for item in dados_aluno.arquivos %}
+                                    <div class="item-submissao"
+                                        data-id-submissao="sub-{{ id_aluno }}-{{ item.questao }}-{{ item.tentativa }}"
+                                        data-questao="{{ item.questao }}" data-arquivo="{{ item.arquivo }}"
+                                        data-aluno="{{ dados_aluno.nome|default:'—' }}"
+                                        data-matricula="{{ dados_aluno.matricula|default:'Sem matrícula' }}"
+                                        data-turma="{{ nome_turma }}"
+                                        data-nota-final-aluno="{{ dados_aluno.nota_final }}"
+                                        data-codigo="{{ item.codigo|escape }}"
+                                        data-nota-dredd="{{ item.nota_dredd|escape }}"
+                                        data-justificativa="{{ item.justificativa|escape }}"
+                                        data-problema="{{ item.problema|escape }}">
+
+                                        <div class="nome-arquivo">📄 Questão {{ item.questao }} · Tentativa {{item.tentativa }}</div>
+                                        <div style="font-size: 0.8rem; color: var(--cor-texto-terciario);">
+                                            {% if item.nota_dredd %}nota: {{ item.nota_dredd }}{% else %}sem nota{%endif %}
+                                        </div>
+                                    </div>
+                                    {% endfor %}
                                 </div>
                             </div>
                             {% endfor %}
                         </div>
                     </div>
-
                     {% endfor %}
-
-
                 </div>
                 {% endif %}
                 <!-- FIM DA CONDICIONAL -->
@@ -134,16 +140,16 @@
             <div class="info-usuario">
                 <div class="titulo-secao">Informações do Estudante</div>
                 <div class="label-info">Nome</div>
-                <div class="valor-info" id="nome-usuario">{{dados_aluno.nome}}</div>
+                <div class="valor-info" id="nome-usuario">-</div>
 
                 <div class="label-info">Matrícula</div>
-                <div class="valor-info" id="matricula-usuario">{{dados_aluno.matricula}}</div>
+                <div class="valor-info" id="matricula-usuario">-</div>
 
                 <div class="label-info">Turma</div>
-                <div class="valor-info" id="turma-usuario">{{dados_aluno.turma}}</div>
+                <div class="valor-info" id="turma-usuario">-</div>
 
                 <div class="label-info">Nota Atual</div>
-                <div class="nota-atual" id="nota-usuario">{{dados_aluno.nota}}</div>
+                <div class="nota-atual" id="nota-usuario">-</div>
             </div>
         </aside>
 
@@ -167,7 +173,7 @@
                     <div class="cabecalho-painel">CÓDIGO DO ALUNO</div>
                     <div class="conteudo-codigo" style="padding: 0;">
                         <pre style="margin: 0; height: 100%; border-radius: 0;">
-                            <code id="codigo-aluno"style="height: 100%; padding: 1.5rem; background: transparent; overflow-x: auto; font-family: 'Courier New', monospace;">
+                            <code id="codigo-aluno" style="height: 100%; padding: 1.5rem; background: transparent; overflow-x: auto; font-family: 'Courier New', monospace;">
                                 <!-- MENSAGEM INICIAL -->
                                 <div style="color: var(--cor-texto-terciario); text-align: center; margin-top: 2rem;">
                                     <h2>Selecione uma questão para visualizar o código do aluno.</h2>
@@ -222,7 +228,8 @@
 
                         <div class="secao-nota">
                             <div class="titulo-nota">Nota Final</div>
-                            <input type="number" class="campo-nota" id="nota-final-input" placeholder="—" min="0" max="10" step="0.1">
+                            <input type="number" class="campo-nota" id="nota-final-input" placeholder="—" min="0"
+                                max="10" step="0.1">
                         </div>
 
                         <div class="secao-nota">
@@ -321,7 +328,8 @@
             </div>
 
             <p class="descricao-modal">
-                O Code Desk processa as submissões lendo os nomes e cabeçalhos dos arquivos dos alunos, mas exige uma
+                O Code-Analyzer processa as submissões lendo os nomes e cabeçalhos dos arquivos dos alunos, mas exige
+                uma
                 pasta separada para os gabaritos da prova.
             </p>
 
@@ -364,4 +372,5 @@
         {{ gabaritos|json_script:"dados-gabaritos" }}
         <script src="{% static 'js/scripts.js' %}"></script>
 </body>
+
 </html>

@@ -22,10 +22,10 @@ def login(request):
         user_obj = User.objects.filter(email=usuario).first()
         user = authenticate(username=user_obj.username, password=senha) if user_obj else None
 
-        if user: # se o usuário for autenticado com sucesso vai para a rota do outro app  CodeDesk.html 
+        if user: # se o usuário for autenticado com sucesso vai para o painel Code-Analyzer
 
             login_django(request, user)
-            return redirect('CodeDesk:codedesk')  # Redireciona para a rota do outro app
+            return redirect('code_analyzer:code_analyzer')  # Redireciona para a rota do outro app
         
         else: # se o usuário não for autenticado com sucesso
             messages.error(request, 'Usuário ou senha inválidos. Tente novamente.')

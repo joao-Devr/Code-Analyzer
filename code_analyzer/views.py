@@ -148,12 +148,11 @@ def _obter_arquivos(arquivo_obj):
 
 
 def _processar_pacote(arquivo_enviado):
-    """Substitui o antigo _processar_zip e analisa o código recebido"""
-    alunos_dados = {}
+    alunos_dados = {} 
     gabaritos_dados = {}
 
     try:
-        # Lê todos os arquivos do pacote e organiza por aluno e questão
+        # Lê todos os arquivos do pacote
         for nome_caminho, bruto in _obter_arquivos(arquivo_enviado):
             nome_arquivo = os.path.basename(nome_caminho)
 
@@ -183,7 +182,7 @@ def _processar_pacote(arquivo_enviado):
             questao_nome = m.group('questao').zfill(2)
             tentativa_nome = m.group('tentativa').zfill(2)
 
-            # Decodifica o conteúdo do arquivo, tentando UTF-8 e depois Latin-1
+            # Decodifica o conteúdo
             try:
                 conteudo = bruto.decode('utf-8')
             except UnicodeDecodeError:
@@ -192,23 +191,32 @@ def _processar_pacote(arquivo_enviado):
             cabecalho, linhas_cabecalho = _analisar_cabecalho(conteudo)
             codigo_sem_cabecalho = _remover_cabecalho(conteudo, linhas_cabecalho)
 
-            # Se não houver cabeçalho, ainda assim usamos os dados do nome do arquivo
             id_curto = (cabecalho['id_curto'] or id_curto_nome).lstrip('0') or '0'
             questao = cabecalho['questao'] or questao_nome
             tentativa = cabecalho['tentativa'] or tentativa_nome
-            # Se o cabeçalho tiver campos conflitantes com o nome do arquivo, damos preferência ao cabeçalho
+            
+            # AGRUPAMENTO POR TURMAS
+            
+            # Define o nome da turma. Se não vier no cabeçalho, vai para "Sem Turma"
+            turma_nome = cabecalho['turma'] or 'Sem Turma'
+            
+            # Se a turma ainda não existir no dicionário principal, criamos ela
+            if turma_nome not in alunos_dados:
+                alunos_dados[turma_nome] = {}
 
-            if id_curto not in alunos_dados:
-                alunos_dados[id_curto] = {
+            # Agora, procuramos o aluno DENTRO da turma dele
+            if id_curto not in alunos_dados[turma_nome]:
+                alunos_dados[turma_nome][id_curto] = {
                     'nome': cabecalho['nome'] or f'Aluno {id_curto}',
                     'matricula': cabecalho['matricula'],
-                    'turma': cabecalho['turma'],
                     'arquivos': [],
                 }
-            elif cabecalho['nome'] and alunos_dados[id_curto]['nome'].startswith('Aluno '):
-                alunos_dados[id_curto]['nome'] = cabecalho['nome']
+            elif cabecalho['nome'] and alunos_dados[turma_nome][id_curto]['nome'].startswith('Aluno '):
+                # Se achou o nome real do aluno depois, atualiza
+                alunos_dados[turma_nome][id_curto]['nome'] = cabecalho['nome']
 
-            alunos_dados[id_curto]['arquivos'].append({
+            # Insere o arquivo na lista de arquivos do aluno, dentro da turma
+            alunos_dados[turma_nome][id_curto]['arquivos'].append({
                 'arquivo': nome_arquivo,
                 'codigo': codigo_sem_cabecalho,
                 'questao': questao,
@@ -217,33 +225,36 @@ def _processar_pacote(arquivo_enviado):
                 'nota_dredd': cabecalho['nota'] or '',
                 'justificativa': cabecalho['justificativa'] or '',
             })
+            
     except ValueError as e:
         return None, None, str(e)
 
-    # Cálculo da nota final
+    # --- NOVO CÁLCULO DE NOTA FINAL
     total_questoes_prova = len(gabaritos_dados)
 
-    for aluno in alunos_dados.values():
-        aluno['arquivos'].sort(key=lambda item: (item['questao'], item['tentativa']))
-        
-        notas_por_questao = {}
-        for arq in aluno['arquivos']:
-            q = arq['questao']
-            n_str = arq['nota_dredd']
-            n_val = 0.0
-            if n_str:
-                try:
-                    n_val = float(n_str)
-                except ValueError:
-                    pass
+    for turma, alunos_da_turma in alunos_dados.items():
+        for id_aluno, aluno in alunos_da_turma.items():
             
-            if q not in notas_por_questao or n_val > notas_por_questao[q]:
-                notas_por_questao[q] = n_val
-        
-        soma_notas = sum(notas_por_questao.values())
-        divisor = total_questoes_prova if total_questoes_prova > 0 else max(len(notas_por_questao), 1)
-        media = soma_notas / divisor
-        aluno['nota_final'] = f"{media:.1f}"
+            aluno['arquivos'].sort(key=lambda item: (item['questao'], item['tentativa']))
+            
+            notas_por_questao = {}
+            for arq in aluno['arquivos']:
+                q = arq['questao']
+                n_str = arq['nota_dredd']
+                n_val = 0.0
+                if n_str:
+                    try:
+                        n_val = float(n_str)
+                    except ValueError:
+                        pass
+                
+                if q not in notas_por_questao or n_val > notas_por_questao[q]:
+                    notas_por_questao[q] = n_val
+            
+            soma_notas = sum(notas_por_questao.values())
+            divisor = total_questoes_prova if total_questoes_prova > 0 else max(len(notas_por_questao), 1)
+            media = soma_notas / divisor
+            aluno['nota_final'] = f"{media:.1f}"
 
     if not alunos_dados:
         return None, None, 'Nenhum arquivo no padrão esperado foi encontrado.'
@@ -252,7 +263,7 @@ def _processar_pacote(arquivo_enviado):
 
 
 @login_required
-def codedesk(request):
+def code_analyzer(request):
     contexto = {}
 
     if request.method == 'POST' and request.FILES.get('arquivo_zip'):
@@ -262,18 +273,18 @@ def codedesk(request):
         # Segurança: extensões permitidas
         if not (nome_arquivo.endswith('.zip') or nome_arquivo.endswith('.tgz') or nome_arquivo.endswith('.tar.gz')):
             contexto['erro'] = "Apenas arquivos .zip, .tgz ou .tar.gz são permitidos."
-            return render(request, 'CodeDesk.html', contexto)
+            return render(request, 'code_analyzer.html', contexto)
 
         # Segurança: tamanho do arquivo
         if arquivo_zip.size > TAMANHO_MAX_ZIP:
             contexto['erro'] = f"Arquivo maior que o limite de {TAMANHO_MAX_ZIP // (1024 * 1024)} MB."
-            return render(request, 'CodeDesk.html', contexto)
+            return render(request, 'code_analyzer.html', contexto)
 
         try:
             alunos_dados, gabaritos_dados, erro = _processar_pacote(arquivo_zip)
         except (zipfile.BadZipFile, tarfile.ReadError):
             contexto['erro'] = "O arquivo enviado está corrompido ou não é um pacote válido."
-            return render(request, 'CodeDesk.html', contexto)
+            return render(request, 'code_analyzer.html', contexto)
 
         if erro:
             contexto['erro'] = erro
@@ -281,4 +292,4 @@ def codedesk(request):
             contexto['alunos'] = alunos_dados
             contexto['gabaritos'] = gabaritos_dados
 
-    return render(request, 'CodeDesk.html', contexto)
+    return render(request, 'code_analyzer.html', contexto)
