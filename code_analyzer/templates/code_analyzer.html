@@ -5,107 +5,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#f5f7fb">
     <title>Code-Analyzer - Correção de Código</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <!-- <link rel="stylesheet" href="{% static 'css/a11y-dark.css' %}"> -->
-
+    <!-- Bootstrap 5.3: grid responsivo, componentes e utilitarios -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="icon" type="image/svg+xml" href="{% static 'img/favicon.svg' %}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        // Definicao antecipada do tema para evitar mudanca visual na abertura da pagina.
+        (function () {
+            var tema = 'light';
+            try {
+                var salvo = localStorage.getItem('code-analyzer-theme');
+                tema = (salvo === 'dark' || salvo === 'light')
+                    ? salvo
+                    : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            } catch (e) {
+                tema = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            document.documentElement.setAttribute('data-theme', tema);
+            document.documentElement.setAttribute('data-bs-theme', tema);
+        })();
+    </script>
 </head>
 
-<body>
-    <!-- HEADER -->
+<body class="pagina-painel">
+    <!-- CABECALHO -->
     <header class="cabecalho">
-        <div class="logo-code-analyzer">💻 Code-Analyzer</div>
+        <div class="identidade-aplicacao">
+            <div class="marca-icone"><i class="fa-solid fa-code" aria-hidden="true"></i></div>
+            <div class="marca-informacoes">
+                <div class="logo-code-analyzer">Code<span>Analyzer</span></div>
+                <div class="marca-subtitulo">Painel de correção</div>
+            </div>
+        </div>
         <div class="botoes-autenticacao">
-            <button class="botao botao-secundario" id="botao-sobre">Sobre</button>
+            <button type="button" class="botao botao-secundario btn btn-outline-secondary" id="botao-sobre"><i class="fa-regular fa-circle-question" aria-hidden="true"></i><span>Sobre</span></button>
+            <button type="button" class="botao-tema" data-theme-toggle aria-label="Alternar tema" aria-pressed="false">
+                <i class="fa-solid fa-moon" data-theme-icon aria-hidden="true"></i>
+                <span data-theme-label>Tema escuro</span>
+            </button>
             {% if user.is_authenticated %}
-            <a class="botao botao-secundario" style="margin-left: auto;" href="#">{{ user.username }}</a>
-            <a class="botao botao-secundario" style="margin-left: 1rem;" href="{% url 'usuario:logout' %}">Sair</a>
+            <a class="botao botao-secundario btn btn-outline-secondary usuario-logado" href="#"><i class="fa-regular fa-circle-user" aria-hidden="true"></i><span>{{ user.first_name }}</span></a>
+            <a class="botao botao-secundario btn btn-outline-secondary" href="{% url 'usuario:logout' %}"><i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i><span>Sair</span></a>
             {% else %}
-            <a class="botao botao-secundario" href="{% url 'usuario:login' %}">Entrar</a>
-            <a class="botao" href="{% url 'usuario:cadastro' %}">Cadastrar</a>
+            <a class="botao botao-secundario btn btn-outline-secondary" href="{% url 'usuario:login' %}"><i class="fa-solid fa-arrow-right-to-bracket" aria-hidden="true"></i><span>Entrar</span></a>
+            <a class="botao btn btn-primary" href="{% url 'usuario:cadastro' %}"><i class="fa-solid fa-user-plus" aria-hidden="true"></i><span>Cadastrar</span></a>
             {% endif %}
         </div>
     </header>
 
-    <!-- LAYOUT PRINCIPAL -->
     <div class="contenedor-principal">
-
-        <!-- SIDEBAR -->
+        <!-- NAVEGACAO LATERAL -->
         <aside class="barra-lateral">
             <div class="secao-barra">
-                <div class="titulo-secao">Submissões</div>
+                <div class="cabecalho-secao">
+                    <div>
+                        <span class="subtitulo-secao">EXPLORADOR</span>
+                        <div class="titulo-secao"><i class="fa-solid fa-folder-tree" aria-hidden="true"></i> Submissões</div>
+                    </div>
+                    <span class="indicador-secao" title="Arquivos de provas"><i class="fa-solid fa-layer-group" aria-hidden="true"></i></span>
+                </div>
 
-                <!-- INÍCIO DA CONDICIONAL -->
                 {% if not alunos %}
-                <!-- SE NÃO HOUVER NENHUM ZIP ENVIADO, MOSTRA O FORMULÁRIO -->
-                <div
-                    style="background-color: var(--cor-fundo-primario); border: 2px dashed var(--cor-borda); border-radius: var(--raio-borda); padding: 1.5rem 1rem; margin-bottom: 1.5rem; text-align: center;">
-
-                    <div style="font-size: 2rem; margin-bottom: 0.5rem; opacity: 0.8;">📁</div>
-                    <h4
-                        style="margin-bottom: 1rem; font-size: 0.95rem; color: var(--cor-texto-primario); font-weight: 600;">
-                        Carregar Submissões</h4>
+                <div class="cartao-upload">
+                    <div class="icone-upload"><i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i></div>
+                    <h2>Carregar submissões</h2>
+                    <p>Comece enviando o arquivo compactado da prova para visualizar os resultados.</p>
 
                     {% if erro %}
-                    <div class="alerta-item"
-                        style="text-align: left; margin-bottom: 1rem; color: var(--cor-texto-primario);">
-                        {{ erro }}
-                    </div>
+                    <div class="alerta-item aviso-upload" role="alert"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> {{ erro }}</div>
                     {% endif %}
 
-                    <form method="POST" enctype="multipart/form-data"
-                        style="display: flex; flex-direction: column; gap: 1rem; text-align: left;">
+                    <form method="POST" enctype="multipart/form-data" class="formulario-upload">
                         {% csrf_token %}
-
-                        <div class="grupo-formulario" style="margin-bottom: 0;">
-                            <label for="arquivo_zip" class="rotulo-campo">Arquivo da prova:</label>
-
+                        <div class="grupo-formulario">
+                            <label for="arquivo_zip" class="rotulo-campo">Arquivo da prova</label>
                             <input type="file" name="arquivo_zip" id="arquivo_zip" accept=".zip, .tgz, .tar.gz" required
-                                class="campo-entrada" style="padding: 0.5rem; cursor: pointer;">
+                                class="campo-entrada form-control">
+                            <small class="ajuda-campo">Arquivos ZIP, TGZ ou TAR.GZ</small>
                         </div>
-
-                        <!-- O botão principal azul do site -->
-                        <button type="submit" class="botao">Processar</button>
+                        <button type="submit" class="botao btn btn-primary"><i class="fa-solid fa-play" aria-hidden="true"></i> Processar prova</button>
                     </form>
                 </div>
                 {% else %}
-                <!-- SE HOUVER ALUNOS (ZIP ENVIADO E PROCESSADO), MOSTRA A LISTA -->
                 <div id="lista-submissoes">
-
-                    <!-- Botão para limpar/enviar novo arquivo -->
-                    <div style="margin-bottom: 15px;">
-
-                        <!-- O link redireciona para a mesma página via GET, limpando o POST -->
-                        <a href="{% url 'code_analyzer:code_analyzer' %}" class="botao botao-secundario"
-                            style="font-size: 0.8rem; width: 100%; display: block; text-align: center; box-sizing: border-box;">Carregar
-                            nova prova</a>
+                    <div class="nova-prova">
+                        <a href="{% url 'code_analyzer:code_analyzer' %}" class="botao botao-secundario btn btn-outline-secondary"><i class="fa-solid fa-arrow-rotate-right" aria-hidden="true"></i> Carregar nova prova</a>
                     </div>
-
-                    <!-- Loop nas Turmas -->
                     {% for nome_turma, alunos_da_turma in alunos.items %}
                     <div class="grupo-turma">
-
-                        <!-- Cabeçalho da Turma (Clicável) -->
                         <div class="pasta-turma" data-turma-toggle>
-                            <span class="icone-pasta">📁</span>
+                            <span class="icone-pasta"><i class="fa-solid fa-folder" aria-hidden="true"></i></span>
                             <span class="nome-pasta">Turma: {{ nome_turma }}</span>
-                            <span class="seta-pasta">▶</span>
+                            <span class="seta-pasta"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></span>
                         </div>
-
-                        <!-- Conteúdo da Turma (Alunos escondidos até abrir) -->
                         <div class="conteudo-turma">
                             {% for id_aluno, dados_aluno in alunos_da_turma.items %}
-                            <div class="grupo-aluno" style="margin-top: 5px;">
+                            <div class="grupo-aluno">
                                 <div class="pasta-aluno" data-aluno-toggle>
-                                    <span class="icone-pasta">🗂️</span>
+                                    <span class="icone-pasta"><i class="fa-regular fa-folder-open" aria-hidden="true"></i></span>
                                     <span class="nome-pasta">{{ dados_aluno.nome }}</span>
-                                    <span class="seta-pasta">▶</span>
+                                    <span class="seta-pasta"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></span>
                                 </div>
-
                                 <div class="arquivos-aluno">
                                     {% for item in dados_aluno.arquivos %}
                                     <div class="item-submissao"
@@ -119,9 +127,8 @@
                                         data-nota-dredd="{{ item.nota_dredd|escape }}"
                                         data-justificativa="{{ item.justificativa|escape }}"
                                         data-problema="{{ item.problema|escape }}">
-
-                                        <div class="nome-arquivo">📄 Questão {{ item.questao }} · Tentativa {{item.tentativa }}</div>
-                                        <div style="font-size: 0.8rem; color: var(--cor-texto-terciario);">
+                                        <div class="nome-arquivo"><i class="fa-regular fa-file-code" aria-hidden="true"></i> Questão {{ item.questao }} · Tentativa {{item.tentativa }}</div>
+                                        <div class="detalhe-submissao">
                                             {% if item.nota_dredd %}nota: {{ item.nota_dredd }}{% else %}sem nota{%endif %}
                                         </div>
                                     </div>
@@ -134,243 +141,222 @@
                     {% endfor %}
                 </div>
                 {% endif %}
-                <!-- FIM DA CONDICIONAL -->
             </div>
 
             <div class="info-usuario">
-                <div class="titulo-secao">Informações do Estudante</div>
-                <div class="label-info">Nome</div>
-                <div class="valor-info" id="nome-usuario">-</div>
-
-                <div class="label-info">Matrícula</div>
-                <div class="valor-info" id="matricula-usuario">-</div>
-
-                <div class="label-info">Turma</div>
-                <div class="valor-info" id="turma-usuario">-</div>
-
-                <div class="label-info">Nota Atual</div>
-                <div class="nota-atual" id="nota-usuario">-</div>
+                <div class="titulo-secao"><i class="fa-regular fa-address-card" aria-hidden="true"></i> Informações do Estudante</div>
+                <div class="grade-informacoes">
+                    <div class="bloco-informacao">
+                        <div class="label-info">Nome</div>
+                        <div class="valor-info" id="nome-usuario">-</div>
+                    </div>
+                    <div class="bloco-informacao">
+                        <div class="label-info">Matrícula</div>
+                        <div class="valor-info" id="matricula-usuario">-</div>
+                    </div>
+                    <div class="bloco-informacao">
+                        <div class="label-info">Turma</div>
+                        <div class="valor-info" id="turma-usuario">-</div>
+                    </div>
+                    <div class="bloco-informacao bloco-nota-atual">
+                        <div class="label-info">Nota Atual</div>
+                        <div class="nota-atual" id="nota-usuario">-</div>
+                    </div>
+                </div>
             </div>
         </aside>
 
-        <!-- CONTEÚDO PRINCIPAL -->
-        <div class="area-conteudo">
-
-            <!-- FAIXA SUPERIOR -->
+        <!-- AREA DE CORRECAO -->
+        <main class="area-conteudo">
             <div class="faixa-superior">
-                <h1 class="titulo-problema" id="titulo-problema">Selecione uma submissão</h1>
+                <div class="faixa-identidade">
+                    <div class="marcador-superior"><span class="pulso-ativo"></span> ÁREA DE AVALIAÇÃO</div>
+                    <h1 class="titulo-problema" id="titulo-problema">Selecione uma submissão</h1>
+                    <p>Visualize o código, confira os alertas e registre a avaliação.</p>
+                </div>
                 <div class="botoes-navegacao">
-                    <button id="btn-anterior" class="botao botao-secundario">← Anterior</button>
-                    <button id="btn-proximo" class="botao botao-secundario">Próximo →</button>
+                    <button type="button" id="btn-anterior" class="botao botao-secundario btn btn-outline-secondary"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Anterior</button>
+                    <button type="button" id="btn-proximo" class="botao botao-secundario btn btn-outline-secondary">Próximo <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
                 </div>
             </div>
 
-            <!-- ÁREA DE CÓDIGO -->
             <div class="area-codigo">
-
-                <!-- PAINEL DO CÓDIGO DO ALUNO -->
-                <div class="painel-codigo">
-                    <div class="cabecalho-painel">CÓDIGO DO ALUNO</div>
-                    <div class="conteudo-codigo" style="padding: 0;">
-                        <pre style="margin: 0; height: 100%; border-radius: 0;">
-                            <code id="codigo-aluno" style="height: 100%; padding: 1.5rem; background: transparent; overflow-x: auto; font-family: 'Courier New', monospace;">
-                                <!-- MENSAGEM INICIAL -->
-                                <div style="color: var(--cor-texto-terciario); text-align: center; margin-top: 2rem;">
-                                    <h2>Selecione uma questão para visualizar o código do aluno.</h2>
-                                </div>
-                            </code>
-                        </pre>
+                <section class="painel-codigo" aria-label="Codigo do aluno">
+                    <div class="cabecalho-painel">
+                        <div class="painel-titulo"><span class="painel-simbolo"><i class="fa-solid fa-code" aria-hidden="true"></i></span><span>Código do aluno</span></div>
+                        <span class="painel-etiqueta">SUBMISSÃO</span>
                     </div>
-                </div>
-
-                <!-- PAINEL DO GABARITO -->
-                <div class="painel-codigo">
-                    <div class="cabecalho-painel">Gabarito</div>
-                    <div class="conteudo-codigo" style="padding: 0;">
-                        <pre style="margin: 0; height: 100%; border-radius: 0;">
-                            <code id="codigo-gabarito" style="height: 100%; padding: 1.5rem; background: transparent; overflow-x: auto; font-family: 'Courier New', monospace;">
-                                <!-- MENSAGEM INICIAL -->
-                                <div style="color: var(--cor-texto-terciario); text-align: center; margin-top: 2rem;">
-                                    <h2>Selecione uma questão para visualizar o gabarito.</h2>
-                                </div>
-                            </code>
-                        </pre>
+                    <div class="conteudo-codigo">
+                        <pre><code id="codigo-aluno"><div class="estado-codigo"><span class="estado-icone"><i class="fa-regular fa-file-code" aria-hidden="true"></i></span><strong>Nenhum código selecionado</strong><span>Selecione uma questão para visualizar o código do aluno.</span></div></code></pre>
                     </div>
-                </div>
+                </section>
 
-                <!-- PAINEL DE ANÁLISE -->
-                <div class="painel-analise">
+                <section class="painel-codigo" aria-label="Codigo do gabarito">
+                    <div class="cabecalho-painel">
+                        <div class="painel-titulo"><span class="painel-simbolo gabarito"><i class="fa-solid fa-check-double" aria-hidden="true"></i></span><span>Gabarito</span></div>
+                        <span class="painel-etiqueta">REFERÊNCIA</span>
+                    </div>
+                    <div class="conteudo-codigo">
+                        <pre><code id="codigo-gabarito"><div class="estado-codigo"><span class="estado-icone"><i class="fa-solid fa-code-compare" aria-hidden="true"></i></span><strong>Gabarito da questão</strong><span>Selecione uma questão para visualizar o gabarito.</span></div></code></pre>
+                    </div>
+                </section>
+
+                <section class="painel-analise" aria-label="Analise e avaliacao">
+                    <div class="analise-cabecalho"><div><span class="subtitulo-secao">RESULTADOS</span><h2>Correção &amp; análise</h2></div><span class="analise-icone"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i></span></div>
                     <div class="abas-analise">
-                        <div class="aba ativa" data-aba="alertas">Alertas</div>
-                        <div class="aba" data-aba="comandos">Comandos Proibidos</div>
+                        <div class="aba ativa" data-aba="alertas"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Alertas</div>
+                        <div class="aba" data-aba="comandos"><i class="fa-solid fa-ban" aria-hidden="true"></i> Comandos Proibidos</div>
                     </div>
-
-                    <!-- ABA ALERTAS -->
-                    <div id="alertas" class="conteudo-aba visivel">
-                        <div class="alerta-vazio">
-                            Nenhum alerta gerado para este arquivo.
+                    <div class="analise-resultados">
+                        <div id="alertas" class="conteudo-aba visivel">
+                            <div class="alerta-vazio"><span class="alerta-icone"><i class="fa-regular fa-circle-check" aria-hidden="true"></i></span><strong>Tudo certo por aqui</strong><span>Nenhum alerta gerado para este arquivo.</span></div>
+                        </div>
+                        <div id="comandos" class="conteudo-aba">
+                            <div class="alerta-vazio"><span class="alerta-icone"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></span><strong>Nenhum comando identificado</strong><span>Nenhum comando proibido detectado.</span></div>
                         </div>
                     </div>
-
-                    <!-- ABA COMANDOS -->
-                    <div id="comandos" class="conteudo-aba">
-                        <div class="alerta-vazio">
-                            Nenhum comando proibido detectado.
-                        </div>
-                    </div>
-
-                    <!-- PAINEL DE NOTAS -->
                     <div class="painel-notas">
+                        <div class="painel-notas-titulo"><i class="fa-regular fa-clipboard" aria-hidden="true"></i> Avaliação</div>
                         <div class="secao-nota">
                             <div class="titulo-nota">Nota DREDD</div>
                             <div class="caixa-notas" id="caixa-nota-dredd">-</div>
                         </div>
-
                         <div class="secao-nota">
                             <div class="titulo-nota">Nota Final</div>
-                            <input type="number" class="campo-nota" id="nota-final-input" placeholder="—" min="0"
-                                max="10" step="0.1">
+                            <input type="number" class="campo-nota form-control" id="nota-final-input" placeholder="—" min="0" max="10" step="0.1">
                         </div>
-
                         <div class="secao-nota">
                             <div class="titulo-nota">Justificativa</div>
-                            <div class="area-justificativa">
-                                <textarea class="textarea-justificativa" id="justificativa-correcao"
-                                    placeholder="Comentário sobre a correção..."></textarea>
-                            </div>
+                            <div class="area-justificativa"><textarea class="textarea-justificativa form-control" id="justificativa-correcao" placeholder="Comentário sobre a correção..."></textarea></div>
                         </div>
-
-                        <button class="botao"
-                            style="margin-top: 0.75rem; background-color: var(--cor-verde); padding: 0.6rem;">💾
-                            Salvar</button>
+                        <button class="botao botao-salvar btn btn-success"><i class="fa-regular fa-floppy-disk" aria-hidden="true"></i> Salvar</button>
                     </div>
-                </div>
+                </section>
             </div>
-        </div>
+        </main>
     </div>
 
     <!-- MODAL DE ENTRAR -->
     <div class="overlay-modal" id="modal-entrar">
         <div class="caixa-modal">
-            <div class="titulo-modal">
-                Entrar
-                <button class="fechar-modal" data-modal="entrar">×</button>
-            </div>
-            <p class="descricao-modal">
-                Acesse sua conta de professor para salvar correções.
-            </p>
-
-            <form id="formulario-entrar">
-                <div class="grupo-formulario">
-                    <label class="rotulo-campo">E-mail</label>
-                    <input type="email" class="campo-entrada" id="email-entrar" placeholder="professor@universidade.edu"
-                        required>
-                </div>
-
-                <div class="grupo-formulario">
-                    <label class="rotulo-campo">Senha</label>
-                    <input type="password" class="campo-entrada" id="senha-entrar" placeholder="Sua senha" required>
-                </div>
-
-                <button type="submit" class="botao">Entrar</button>
-            </form>
-
-            <div style="margin-top: 1rem; text-align: center; color: var(--cor-texto-secundario); font-size: 0.9rem;">
-                Não tem conta? <a class="link-autenticacao" id="link-cadastro">Criar conta</a>
-            </div>
+            <div class="titulo-modal">Entrar <button class="fechar-modal" data-modal="entrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
+            <p class="descricao-modal">Acesse sua conta de professor para salvar correções.</p>
+            <form action="{% url 'usuario:login' %}" method="POST">
+    {% csrf_token %}
+    <div class="grupo-formulario">
+        <label class="rotulo-campo">E-mail</label>
+        <div class="campo-com-icone">
+            <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+            <input type="email" class="campo-entrada form-control" name="email-entrar" placeholder="professor@universidade.edu" required>
+        </div>
+    </div>
+    <div class="grupo-formulario">
+        <label class="rotulo-campo">Senha</label>
+        <div class="campo-com-icone">
+            <i class="fa-solid fa-lock" aria-hidden="true"></i>
+            <input type="password" class="campo-entrada form-control" name="senha-entrar" placeholder="Sua senha" required>
+        </div>
+    </div>
+    <button type="submit" class="botao btn btn-primary">Entrar</button>
+</form>
+            <div class="auth-alternativa">Não tem conta? <a class="link-autenticacao" id="link-cadastro">Criar conta</a></div>
         </div>
     </div>
 
     <!-- MODAL DE CADASTRAR -->
     <div class="overlay-modal" id="modal-cadastrar">
         <div class="caixa-modal">
-            <div class="titulo-modal">
-                Criar conta
-                <button class="fechar-modal" data-modal="cadastrar">×</button>
-            </div>
-            <p class="descricao-modal">
-                Cadastre-se para gerenciar e corrigir provas.
-            </p>
-
-            <form id="formulario-cadastrar">
-                <div class="grupo-formulario">
-                    <label class="rotulo-campo">Nome completo</label>
-                    <input type="text" class="campo-entrada" id="nome-cadastro" placeholder="Maria Souza" required>
-                </div>
-
-                <div class="grupo-formulario">
-                    <label class="rotulo-campo">E-mail</label>
-                    <input type="email" class="campo-entrada" id="email-cadastro"
-                        placeholder="professor@universidade.edu" required>
-                </div>
-
-                <div class="grupo-formulario">
-                    <label class="rotulo-campo">Senha</label>
-                    <input type="password" class="campo-entrada" id="senha-cadastro" placeholder="Mínimo 8 caracteres"
-                        required>
-                </div>
-
-                <button type="submit" class="botao">Criar conta</button>
-            </form>
-
-            <div style="margin-top: 1rem; text-align: center; color: var(--cor-texto-secundario); font-size: 0.9rem;">
-                Já tem conta? <a class="link-autenticacao" id="link-entrar">Entrar</a>
-            </div>
+            <div class="titulo-modal">Criar conta <button class="fechar-modal" data-modal="cadastrar"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
+            <p class="descricao-modal">Cadastre-se para gerenciar e corrigir provas.</p>
+            <form action="{% url 'usuario:cadastro' %}" method="POST">
+    {% csrf_token %}
+    <div class="grupo-formulario">
+        <label class="rotulo-campo">Nome completo</label>
+        <div class="campo-com-icone">
+            <i class="fa-regular fa-user" aria-hidden="true"></i>
+            <input type="text" class="campo-entrada form-control" name="nome-cadastro" placeholder="Maria Souza" required>
+        </div>
+    </div>
+    <div class="grupo-formulario">
+        <label class="rotulo-campo">E-mail</label>
+        <div class="campo-com-icone">
+            <i class="fa-regular fa-envelope" aria-hidden="true"></i>
+            <input type="email" class="campo-entrada form-control" name="email-cadastro" placeholder="professor@universidade.edu" required>
+        </div>
+    </div>
+    <div class="grupo-formulario">
+        <label class="rotulo-campo">Senha</label>
+        <div class="campo-com-icone">
+            <i class="fa-solid fa-lock" aria-hidden="true"></i>
+            <input type="password" class="campo-entrada form-control" name="senha-cadastro" placeholder="Mínimo 8 caracteres" required>
+        </div>
+    </div>
+    <button type="submit" class="botao btn btn-primary">Criar conta</button>
+</form>
+            <div class="auth-alternativa">Já tem conta? <a class="link-autenticacao" id="link-entrar">Entrar</a></div>
         </div>
     </div>
 
-    <!-- MODAL DE INFORMAÇÕES SOBRE ESTRUTURA -->
+    <!-- MODAL SOBRE A ESTRUTURA -->
     <div class="overlay-modal" id="modal-sobre">
         <div class="caixa-modal modal-instrucoes">
-            <div class="titulo-modal">
-                Como formatar a submissão
-                <button class="fechar-modal" data-modal="sobre">×</button>
-            </div>
-
-            <p class="descricao-modal">
-                O Code-Analyzer processa as submissões lendo os nomes e cabeçalhos dos arquivos dos alunos, mas exige
-                uma
-                pasta separada para os gabaritos da prova.
-            </p>
-
+            <div class="titulo-modal">Como formatar a submissão <button class="fechar-modal" data-modal="sobre"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div>
+            <p class="descricao-modal">O Code-Analyzer processa as submissões lendo os nomes e cabeçalhos dos arquivos dos alunos, mas exige uma pasta separada para os gabaritos da prova.</p>
             <div class="secao-instrucoes">
-                <div class="numero-instrucao">1. Pasta de Gabaritos (Obrigatório)</div>
-                <div class="texto-instrucao">
-                    O arquivo ZIP deve conter uma pasta chamada <code>gabaritos/</code>. Dentro dela, coloque as
-                    soluções esperadas para cada problema (ex.: <code>p01.c</code>, <code>p02.c</code>).
-                </div>
+                <div class="numero-instrucao"><span>01</span> Pasta de Gabaritos (Obrigatório)</div>
+                <div class="texto-instrucao">O arquivo ZIP deve conter uma pasta chamada <code>gabaritos/</code>. Dentro dela, coloque as soluções esperadas para cada problema (ex.: <code>p01.c</code>, <code>p02.c</code>).</div>
             </div>
-
             <div class="secao-instrucoes">
-                <div class="numero-instrucao">2. Arquivos dos Alunos (Padrão de Nome)</div>
-                <div class="texto-instrucao">
-                    Os arquivos dos alunos podem estar organizados em pastas ou soltos no ZIP, mas
-                    <strong>precisam</strong> seguir o padrão:
-                    <code>a&lt;id&gt;q&lt;questao&gt;t&lt;tentativa&gt;.&lt;extensao&gt;</code>.<br>
-                    Exemplo: <strong>a042820q02t01.c</strong>.
-                </div>
+                <div class="numero-instrucao"><span>02</span> Arquivos dos Alunos (Padrão de Nome)</div>
+                <div class="texto-instrucao">Os arquivos dos alunos podem estar organizados em pastas ou soltos no ZIP, mas <strong>precisam</strong> seguir o padrão: <code>a&lt;id&gt;q&lt;questao&gt;t&lt;tentativa&gt;.&lt;extensao&gt;</code>. Exemplo: <strong>a042820q02t01.c</strong>.</div>
             </div>
-
             <div class="secao-instrucoes">
-                <div class="numero-instrucao">3. Cabeçalho de Metadados</div>
-                <div class="texto-instrucao">
-                    O sistema busca dados nas 15 primeiras linhas do arquivo do aluno. Use os marcadores de comentário
-                    da sua linguagem (<code>//</code>, <code>#</code>, etc).
-                </div>
+                <div class="numero-instrucao"><span>03</span> Cabeçalho de Metadados</div>
+                <div class="texto-instrucao">O sistema busca dados nas 15 primeiras linhas do arquivo do aluno. Use os marcadores de comentário da sua linguagem (<code>//</code>, <code>#</code>, etc).</div>
             </div>
-
-            <div class="estrutura-esperada">
-                prova-01.zip/
-                ├── gabaritos/ <-- Pasta obrigatória │ ├── p01.c │ └── p02.c └── (Arquivos de alunos) <-- O sistema acha
-                    pelo nome ├── a042820q01t01.c └── a042820q02t01.c // Exemplo de cabeçalho lido do aluno: // Aluno:
-                    Ana Beatriz Lima 2823610045 (4735) // Questao: 2, 1a tentativa, nota: 9.8 </div>
-
-                    <button class="botao" id="botao-fechar-instrucoes" style="margin-top: 1rem;">Entendi</button>
+            <div class="estrutura-esperada"><strong>Exemplo de organização</strong>
+<pre>prova-01.zip/
+├── gabaritos/
+│   ├── p01.c
+│   └── p02.c
+├── a042820q01t01.c
+└── a042820q02t01.c</pre>
+                <small>// Aluno: Ana Beatriz Lima 2823610045 (4735)<br>// Questao: 2, 1a tentativa, nota: 9.8</small>
             </div>
+            <button class="botao btn btn-primary" id="botao-fechar-instrucoes"><i class="fa-solid fa-check" aria-hidden="true"></i> Entendi</button>
         </div>
-        <!-- Passa o dicionário de gabaritos gerado no Python para o JS de forma segura -->
-        {{ gabaritos|json_script:"dados-gabaritos" }}
-        <script src="{% static 'js/scripts.js' %}"></script>
+    </div>
+    <!-- Passa o dicionário de gabaritos gerado no Python para o JS de forma segura -->
+    {{ gabaritos|json_script:"dados-gabaritos" }}
+    <script src="{% static 'js/scripts.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Controle visual do tema; independente do JS existente do Django. -->
+    <script>
+        (function () {
+            function atualizarBotoes(tema) {
+                document.querySelectorAll('[data-theme-toggle]').forEach(function (botao) {
+                    var escuro = tema === 'dark';
+                    var icone = botao.querySelector('[data-theme-icon]');
+                    var legenda = botao.querySelector('[data-theme-label]');
+                    var texto = escuro ? 'Ativar tema claro' : 'Ativar tema escuro';
+                    botao.setAttribute('aria-label', texto);
+                    botao.setAttribute('title', texto);
+                    botao.setAttribute('aria-pressed', String(escuro));
+                    if (icone) icone.className = escuro ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+                    if (legenda) legenda.textContent = escuro ? 'Tema claro' : 'Tema escuro';
+                });
+            }
+            document.addEventListener('click', function (evento) {
+                var botao = evento.target.closest('[data-theme-toggle]');
+                if (!botao) return;
+                var tema = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', tema);
+                document.documentElement.setAttribute('data-bs-theme', tema);
+                try { localStorage.setItem('code-analyzer-theme', tema); } catch (e) { /* Armazenamento opcional */ }
+                atualizarBotoes(tema);
+            });
+            atualizarBotoes(document.documentElement.getAttribute('data-theme') || 'light');
+        })();
+    </script>
 </body>
-
 </html>
