@@ -196,9 +196,16 @@ document.getElementById('justificativa-correcao')?.addEventListener('input', (e)
 });
 
 // Lógica de Enviar a Avaliação (Botão Salvar)
-const botaoSalvar = document.querySelector('.painel-notas .botao');
+function obterCsrfToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.content : '';
+}
+
+const botaoSalvar = document.querySelector('.painel-notas .botao-salvar');
 if (botaoSalvar) {
-    botaoSalvar.addEventListener('click', () => {
+    const htmlOriginalBotao = botaoSalvar.innerHTML;
+
+    botaoSalvar.addEventListener('click', async () => {
         const submissaoAtiva = document.querySelector('.item-submissao.ativo');
 
         if (!submissaoAtiva) {
@@ -206,25 +213,56 @@ if (botaoSalvar) {
             return;
         }
 
-        const idSubmissao = submissaoAtiva.dataset.idSubmissao;
-        const notaFinalInput = document.getElementById('nota-final-input');
-        const justificativaInput = document.getElementById('justificativa-correcao');
-
-        const notaFinal = parseFloat(notaFinalInput?.value);
-        const justificativa = justificativaInput?.value;
+        const notaFinal = parseFloat(document.getElementById('nota-final-input')?.value);
+        const justificativa = document.getElementById('justificativa-correcao')?.value || '';
 
         if (isNaN(notaFinal)) {
             alert('Por favor, preencha a Nota Final com um valor numérico.');
             return;
         }
 
-        console.log('Correção pronta para ser enviada ao backend:', {
-            id_submissao: idSubmissao,
-            nota_final: notaFinal,
-            justificativa: justificativa
-        });
+        botaoSalvar.disabled = true;
+        try {
+            const resposta = await fetch(botaoSalvar.dataset.urlSalvar, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': obterCsrfToken(),
+                },
+                body: JSON.stringify({
+                    turma: submissaoAtiva.dataset.turma,
+                    id_aluno: submissaoAtiva.dataset.idAluno,
+                    questao: submissaoAtiva.dataset.questao,
+                    tentativa: submissaoAtiva.dataset.tentativa,
+                    nota_final: notaFinal,
+                    justificativa: justificativa,
+                }),
+            });
+            const dados = await resposta.json().catch(() => ({}));
 
-        alert('Correção salva com sucesso!');
+            if (!resposta.ok) {
+                alert(dados.erro || 'Não foi possível salvar a avaliação.');
+                return;
+            }
+
+            // Atualiza a tela com a nova nota final do aluno
+            const grupoAluno = submissaoAtiva.closest('.grupo-aluno');
+            const itensDoAluno = grupoAluno ? grupoAluno.querySelectorAll('.item-submissao') : [submissaoAtiva];
+            itensDoAluno.forEach(i => { i.dataset.notaFinalAluno = dados.nota_final_aluno; });
+
+            const notaUsuario = document.getElementById('nota-usuario');
+            if (notaUsuario) notaUsuario.textContent = dados.nota_final_aluno;
+
+            const detalhe = submissaoAtiva.querySelector('.detalhe-submissao');
+            if (detalhe) detalhe.textContent = `nota: ${submissaoAtiva.dataset.notaDredd || '—'} · final: ${notaFinal}`;
+
+            botaoSalvar.innerHTML = '<i class="fa-solid fa-check" aria-hidden="true"></i> Salvo!';
+            setTimeout(() => { botaoSalvar.innerHTML = htmlOriginalBotao; }, 1500);
+        } catch (erro) {
+            alert('Erro de conexão ao salvar a avaliação.');
+        } finally {
+            botaoSalvar.disabled = false;
+        }
     });
 }
 
@@ -289,4 +327,4 @@ document.addEventListener('DOMContentLoaded', function () {
     ativarPastasDeAlunos();
     ativarPastasDeTurmas();
     configurarBotoesNavegacao();
-}); 
+});

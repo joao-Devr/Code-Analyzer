@@ -1,9 +1,13 @@
+import json
+import math
 import os
 import re
 import zipfile
 import tarfile
 
 from django.shortcuts import render
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 
 
@@ -147,6 +151,34 @@ def _obter_arquivos(arquivo_obj):
                     yield info.name, f.read()
 
 
+def _nota_dredd_numerica(arquivo):
+    try:
+        return float(arquivo['nota_dredd'])
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _calcular_nota_final(aluno, total_questoes):
+    """
+    Nota final do aluno = soma das notas por questão / total de questões da prova.
+    Em cada questão vale a nota que o professor lançou (a maior entre as tentativas
+    avaliadas por ele); se ele não avaliou nenhuma tentativa, vale a maior nota do Dredd.
+    """
+    dredd, professor = {}, {}
+    for arq in aluno['arquivos']:
+        q = arq['questao']
+        n = _nota_dredd_numerica(arq)
+        if q not in dredd or n > dredd[q]:
+            dredd[q] = n
+        np_ = arq.get('nota_professor')
+        if np_ is not None and (q not in professor or np_ > professor[q]):
+            professor[q] = np_
+
+    notas_por_questao = {q: professor.get(q, n) for q, n in dredd.items()}
+    divisor = total_questoes if total_questoes > 0 else max(len(notas_por_questao), 1)
+    return f"{sum(notas_por_questao.values()) / divisor:.1f}"
+
+
 def _processar_pacote(arquivo_enviado):
     alunos_dados = {} 
     gabaritos_dados = {}
@@ -224,37 +256,19 @@ def _processar_pacote(arquivo_enviado):
                 'problema': cabecalho['problema'] or '',
                 'nota_dredd': cabecalho['nota'] or '',
                 'justificativa': cabecalho['justificativa'] or '',
+                'nota_professor': None,
             })
             
     except ValueError as e:
         return None, None, str(e)
 
-    # --- NOVO CÁLCULO DE NOTA FINAL
+    # --- CÁLCULO DA NOTA FINAL
     total_questoes_prova = len(gabaritos_dados)
 
-    for turma, alunos_da_turma in alunos_dados.items():
-        for id_aluno, aluno in alunos_da_turma.items():
-            
+    for alunos_da_turma in alunos_dados.values():
+        for aluno in alunos_da_turma.values():
             aluno['arquivos'].sort(key=lambda item: (item['questao'], item['tentativa']))
-            
-            notas_por_questao = {}
-            for arq in aluno['arquivos']:
-                q = arq['questao']
-                n_str = arq['nota_dredd']
-                n_val = 0.0
-                if n_str:
-                    try:
-                        n_val = float(n_str)
-                    except ValueError:
-                        pass
-                
-                if q not in notas_por_questao or n_val > notas_por_questao[q]:
-                    notas_por_questao[q] = n_val
-            
-            soma_notas = sum(notas_por_questao.values())
-            divisor = total_questoes_prova if total_questoes_prova > 0 else max(len(notas_por_questao), 1)
-            media = soma_notas / divisor
-            aluno['nota_final'] = f"{media:.1f}"
+            aluno['nota_final'] = _calcular_nota_final(aluno, total_questoes_prova)
 
     if not alunos_dados:
         return None, None, 'Nenhum arquivo no padrão esperado foi encontrado.'
@@ -289,7 +303,53 @@ def code_analyzer(request):
         if erro:
             contexto['erro'] = erro
         else:
-            contexto['alunos'] = alunos_dados
+            contexto['alunos'] = alunos_dados   
+            request.session['alunos_salvos'] = alunos_dados
+            request.session['total_questoes'] = len(gabaritos_dados)
             contexto['gabaritos'] = gabaritos_dados
 
     return render(request, 'code_analyzer.html', contexto)
+
+@login_required
+def relatorio(request):
+    # Recupera os dados da sessão (se existirem)
+    alunos_dados = request.session.get('alunos_salvos', {})
+    return render(request, 'relatorio.html', {'alunos': alunos_dados})
+
+
+@login_required
+@require_POST
+def salvar_avaliacao(request):
+    """Grava a nota do professor numa submissão e recalcula a nota final do aluno."""
+    try:
+        dados = json.loads(request.body)
+        turma = str(dados['turma'])
+        id_aluno = str(dados['id_aluno'])
+        questao = str(dados['questao']).zfill(2)
+        tentativa = str(dados['tentativa']).zfill(2)
+        nota = float(dados['nota_final'])
+        justificativa = str(dados.get('justificativa') or '').strip()
+    except (ValueError, KeyError, TypeError):
+        return JsonResponse({'erro': 'Dados inválidos.'}, status=400)
+
+    if not math.isfinite(nota) or not (0 <= nota <= 10):
+        return JsonResponse({'erro': 'A nota deve estar entre 0 e 10.'}, status=400)
+
+    alunos = request.session.get('alunos_salvos')
+    aluno = (alunos or {}).get(turma, {}).get(id_aluno)
+    if aluno is None:
+        return JsonResponse({'erro': 'Aluno não encontrado. Carregue a prova novamente.'}, status=404)
+
+    arquivo = next((a for a in aluno['arquivos']
+                    if a['questao'] == questao and a['tentativa'] == tentativa), None)
+    if arquivo is None:
+        return JsonResponse({'erro': 'Submissão não encontrada.'}, status=404)
+
+    arquivo['nota_professor'] = nota
+    arquivo['justificativa_professor'] = justificativa
+    aluno['nota_final'] = _calcular_nota_final(aluno, request.session.get('total_questoes', 0))
+
+    request.session['alunos_salvos'] = alunos
+    request.session.modified = True
+
+    return JsonResponse({'ok': True, 'nota_final_aluno': aluno['nota_final']})
