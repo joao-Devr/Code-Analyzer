@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#f5f7fb">
     <title>Code-Analyzer - Correção de Código</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <!-- <link rel="stylesheet" href="{% static 'css/a11y-dark.css' %}"> -->
     <!-- Bootstrap 5.3: grid responsivo, componentes e utilitarios -->
@@ -118,7 +119,10 @@
                                     {% for item in dados_aluno.arquivos %}
                                     <div class="item-submissao"
                                         data-id-submissao="sub-{{ id_aluno }}-{{ item.questao }}-{{ item.tentativa }}"
-                                        data-questao="{{ item.questao }}" data-arquivo="{{ item.arquivo }}"
+                                        data-id-aluno="{{ id_aluno }}" 
+                                        data-questao="{{ item.questao }}"
+                                        data-tentativa="{{ item.tentativa }}" 
+                                        data-arquivo="{{ item.arquivo }}"
                                         data-aluno="{{ dados_aluno.nome|default:'—' }}"
                                         data-matricula="{{ dados_aluno.matricula|default:'Sem matrícula' }}"
                                         data-turma="{{ nome_turma }}"
@@ -203,33 +207,51 @@
 
                 <section class="painel-analise" aria-label="Analise e avaliacao">
                     <div class="analise-cabecalho"><div><span class="subtitulo-secao">RESULTADOS</span><h2>Correção &amp; análise</h2></div><span class="analise-icone"><i class="fa-solid fa-chart-simple" aria-hidden="true"></i></span></div>
+                    
+                    <!-- NOVAS ABAS -->
                     <div class="abas-analise">
-                        <div class="aba ativa" data-aba="alertas"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i> Alertas</div>
-                        <div class="aba" data-aba="comandos"><i class="fa-solid fa-ban" aria-hidden="true"></i> Comandos Proibidos</div>
+                        <div class="aba ativa" data-aba="avaliacao"><i class="fa-regular fa-clipboard" aria-hidden="true"></i> Avaliação</div>
+                        <div class="aba" data-aba="relatorio"><i class="fa-solid fa-table-list" aria-hidden="true"></i> Visão Geral</div>
+                        <div class="aba" data-aba="comandos"><i class="fa-solid fa-ban" aria-hidden="true"></i> Comandos</div>
                     </div>
+                    
                     <div class="analise-resultados">
-                        <div id="alertas" class="conteudo-aba visivel">
-                            <div class="alerta-vazio"><span class="alerta-icone"><i class="fa-regular fa-circle-check" aria-hidden="true"></i></span><strong>Tudo certo por aqui</strong><span>Nenhum alerta gerado para este arquivo.</span></div>
+                        <!-- 1. Aba Visão Geral (Botão para nova página) -->
+                        <div id="relatorio" class="conteudo-aba">
+                            <div class="alerta-vazio" style="min-height: 250px;">
+                                <span class="alerta-icone"><i class="fa-solid fa-users-viewfinder"></i></span>
+                                <strong>Desempenho da Turma</strong>
+                                <span>Acesse a página com as notas consolidadas de todos os estudantes.</span>
+                                <!-- O link abre a nova página em outra aba para não perder a correção atual -->
+                                <a href="{% url 'code_analyzer:relatorio' %}" target="_blank" class="botao btn btn-primary mt-3">
+                                    <i class="fa-solid fa-table"></i> Visualizar notas
+                                </a>
+                            </div>
                         </div>
+
+                        <!-- 2. Aba Avaliação (Painel de Notas Transferido) -->
+                        <div id="avaliacao" class="conteudo-aba visivel">
+                            <div class="painel-notas" style="border: none; padding: 10px 0 0; background: transparent; box-shadow: none;">
+                                <div class="secao-nota">
+                                    <div class="titulo-nota">Nota DREDD</div>
+                                    <div class="caixa-notas" id="caixa-nota-dredd">-</div>
+                                </div>
+                                <div class="secao-nota">
+                                    <div class="titulo-nota">Nota Final</div>
+                                    <input type="number" class="campo-nota form-control" id="nota-final-input" placeholder="—" min="0" max="10" step="0.1">
+                                </div>
+                                <div class="secao-nota">
+                                    <div class="titulo-nota">Justificativa</div>
+                                    <div class="area-justificativa"><textarea class="textarea-justificativa form-control" id="justificativa-correcao" placeholder="Comentário sobre a correção..."></textarea></div>
+                                </div>
+                                <button type="button" class="botao botao-salvar btn btn-success" data-url-salvar="{% url 'code_analyzer:salvar_avaliacao' %}"><i class="fa-regular fa-floppy-disk" aria-hidden="true"></i> Salvar Avaliação</button>
+                            </div>
+                        </div>
+
+                        <!-- 3. Aba Comandos -->
                         <div id="comandos" class="conteudo-aba">
                             <div class="alerta-vazio"><span class="alerta-icone"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></span><strong>Nenhum comando identificado</strong><span>Nenhum comando proibido detectado.</span></div>
                         </div>
-                    </div>
-                    <div class="painel-notas">
-                        <div class="painel-notas-titulo"><i class="fa-regular fa-clipboard" aria-hidden="true"></i> Avaliação</div>
-                        <div class="secao-nota">
-                            <div class="titulo-nota">Nota DREDD</div>
-                            <div class="caixa-notas" id="caixa-nota-dredd">-</div>
-                        </div>
-                        <div class="secao-nota">
-                            <div class="titulo-nota">Nota Final</div>
-                            <input type="number" class="campo-nota form-control" id="nota-final-input" placeholder="—" min="0" max="10" step="0.1">
-                        </div>
-                        <div class="secao-nota">
-                            <div class="titulo-nota">Justificativa</div>
-                            <div class="area-justificativa"><textarea class="textarea-justificativa form-control" id="justificativa-correcao" placeholder="Comentário sobre a correção..."></textarea></div>
-                        </div>
-                        <button class="botao botao-salvar btn btn-success"><i class="fa-regular fa-floppy-disk" aria-hidden="true"></i> Salvar</button>
                     </div>
                 </section>
             </div>

@@ -575,3 +575,64 @@ a:hover { color: var(--cor-azul-escuro); }
     .cabecalho-painel { padding: 0 11px; }
     .aba { font-size: .67rem; }
 }
+
+/* ================================================================
+   RELATÓRIO DE NOTAS (PÁGINA DEDICADA)
+   Substitua em style.css todo o bloco antigo, a partir do comentário
+   "TABELA DE RELATÓRIO DE NOTAS (PÁGINA DEDICADA)" até o final do arquivo.
+   ================================================================ */
+
+.area-relatorio { max-width: 1000px; margin: 0 auto; padding: 36px 20px 60px; }
+
+.relatorio-titulo { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+.relatorio-titulo h1 { margin: 0; font-size: 1.7rem; font-weight: 750; letter-spacing: -.04em; color: var(--cor-texto-primario); }
+.relatorio-titulo p { margin: 5px 0 0; color: var(--cor-texto-secundario); }
+
+/* Busca */
+.barra-busca { margin-bottom: 20px; max-width: 380px; }
+
+/* Cartão de cada turma */
+.cartao-turma { margin-bottom: 22px; border: 1px solid var(--cor-borda); border-radius: 12px; overflow: hidden; background: var(--cor-fundo-secundario); box-shadow: var(--sombra-painel); }
+.cartao-turma[hidden], .tabela-relatorio tbody tr[hidden] { display: none; }
+.cartao-turma-cabecalho { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 13px 20px; background: var(--cor-azul-suave); border-bottom: 1px solid var(--cor-borda); }
+.cartao-turma-nome { display: flex; align-items: center; gap: 9px; font-size: 1rem; font-weight: 700; color: var(--cor-texto-primario); }
+.cartao-turma-nome i { color: var(--cor-azul); }
+.cartao-turma-meta { font-size: .8rem; color: var(--cor-texto-secundario); }
+
+/* Tabela */
+.tabela-relatorio { width: 100%; margin: 0; border-collapse: collapse; font-size: .9rem; text-align: left; }
+.tabela-relatorio th, .tabela-relatorio td { padding: 11px 20px; border-bottom: 1px solid var(--cor-borda); color: var(--cor-texto-primario); vertical-align: middle; }
+.tabela-relatorio thead th { font-size: .72rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--cor-texto-secundario); background: var(--cor-fundo-terciario); }
+.tabela-relatorio tbody tr:nth-child(even) { background: var(--cor-fundo-terciario); }
+.tabela-relatorio tbody tr:hover { background: var(--cor-azul-suave); }
+.tabela-relatorio tbody tr:last-child td { border-bottom: none; }
+
+.col-matricula { width: 20%; }
+.coluna-nota { width: 20%; text-align: right !important; }
+.matricula { font-family: 'SFMono-Regular', Consolas, monospace; font-size: .86rem; color: var(--cor-texto-secundario); }
+.nome-estudante { font-weight: 550; }
+
+/* Nota */
+.nota-valor { font-size: 1.1rem; font-weight: 750; color: var(--cor-azul); font-variant-numeric: tabular-nums; }
+
+/* Estados vazios */
+.area-tabela-relatorio { background: var(--cor-fundo-secundario); border: 1px solid var(--cor-borda); border-radius: 12px; box-shadow: var(--sombra-painel); }
+.estado-vazio-relatorio { padding: 60px 20px; text-align: center; color: var(--cor-texto-terciario); }
+.estado-vazio-relatorio i { display: block; margin-bottom: 15px; font-size: 2.5rem; opacity: .5; }
+.sem-resultados { padding: 40px 20px; text-align: center; color: var(--cor-texto-terciario); }
+.sem-resultados[hidden] { display: none; }
+.sem-resultados i { display: block; margin-bottom: 10px; font-size: 1.8rem; opacity: .5; }
+
+@media (max-width: 760px) {
+    .tabela-relatorio th, .tabela-relatorio td { padding: 10px 12px; }
+}
+
+/* Impressão / PDF */
+@media print {
+    .cabecalho, .no-print { display: none !important; }
+    body { background: #fff !important; }
+    .area-relatorio { max-width: none; padding: 0; }
+    .cartao-turma { box-shadow: none; break-inside: avoid; }
+    .cartao-turma { margin-bottom: 14px; }
+    .tabela-relatorio tbody tr:hover { background: transparent; }
+}
