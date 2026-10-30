@@ -28,10 +28,10 @@ PADRAO_NOME_ARQUIVO = re.compile(
 )
 
 # Linhas do cabeçalho inserido em cada arquivo, ex.:
-# "# Aluno: Nome do Estudante 20221234 (4735)"
+# "# Aluno: Nome do Estudante 2021234 (4735)"
 # "# Questao: 2, 1a tentativa, nota: 3"
 # "# Problema: Matrizes – Matriz Resultante de espaços vazios (1884)"
-# "# Turma(s): FP1 3A, semestre: 2026/1, e-mail: nome@dominio.edu"
+# "# Turma(s): FG1 3A, semestre: 2046/1, e-mail: nome@dominio.edu"
 # "# Justificativa da nota: ..."
 
 PADRAO_ALUNO = re.compile(r'Aluno:\s*(?P<nome>.+?)\s+(?P<matricula>\d+)\s*\((?P<id_curto>\d+)\)\s*$')

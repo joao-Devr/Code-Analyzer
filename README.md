@@ -1,67 +1,94 @@
-# Code-Analyzer
+# Code-Desk 💻📊
 
-**Code-Analyzer** é uma bancada web de avaliação de código, pensada para professores corrigirem submissões de exercícios de programação. A ferramenta permite carregar um lote de submissões em `.zip`, visualizar o código de cada aluno lado a lado com o gabarito, registrar alertas/observações e consolidar uma nota final por questão.
+**Code-Desk** é uma plataforma web desenvolvida em **Django** para automatizar a análise de código, a correção de exercícios de programação e o acompanhamento do desempenho acadêmico.
 
-> Projeto acadêmico em desenvolvimento, construído com Django.
-
----
-
-## ✨ Funcionalidades
-
-- **Autenticação de professores** — cadastro e login de conta , com sessão protegida.
-- **Upload em lote de submissões** — envio de um único arquivo `.zip` com os arquivos de todos os alunos, processado em memória.
-- **Parser automático de cabeçalho** — cada arquivo enviado é identificado pelo nome no padrão `a<id_curto>q<questão>t<tentativa>.<extensão>` (ex.: `a4020q02t01.py`) e por um cabeçalho em comentário no topo do arquivo, do qual o sistema extrai automaticamente: nome do aluno, matrícula, turma, e-mail, questão, tentativa, nota e justificativa.
-- **Validações de segurança no upload** — checagem de extensão `.zip`, limite de tamanho do arquivo compactado (20 MB) e do conteúdo descompactado (50 MB), e limite máximo de arquivos por `.zip` (2000), para evitar uploads abusivos.
-- **Navegação por aluno e por arquivo** — barra lateral com a lista de submissões extraídas do `.zip`, agrupadas por aluno e ordenadas por questão/tentativa.
-- **Painel de comparação de código** — visualização lado a lado do código do aluno e do gabarito da questão.
-- **Painel de análise** com abas para:
-  - **Alertas** — observações automáticas sobre o código.
-  - **Comandos Proibidos** — detecção de comandos/funções não permitidos no exercício.
-  - **Histórico de Plágio** — comparação entre submissões para identificar similaridades suspeitas.
-- **Painel de notas** — nota automática (Dredd, extraída do cabeçalho do arquivo) e nota manual do professor e campo de justificativa da correção.
-- **Informações do estudante** — nome, matrícula, turma e nota atual exibidos na barra lateral.
-- **Script utilitário de geração de massa de teste** (`Arquivos de teste/gerar_test.py`) — gera arquivos de submissão fictícios já no padrão de nome e cabeçalho esperado pelo sistema, e os empacota em um `.zip`, útil para testar o upload sem depender de dados reais de alunos.
+A ferramenta permite o upload de pacotes de provas em lote (`.zip`, `.tgz`, `.tar.gz`), organiza automaticamente os arquivos por **turmas** e **estudantes**, exibe o código do aluno lado a lado com o gabarito oficial com destaque de sintaxe, e possibilita o lançamento de notas e justificativas com atualização em tempo real e geração de relatórios consolidados.
 
 ---
 
-## 🛠️ Tecnologias utilizadas
+## ✨ Funcionalidades e destaques
+
+- 🔐 **Autenticação com e-mail:** fluxo de login e cadastro ajustado para usar o e-mail como `username` único no Django, evitando conflitos entre cadastros com nomes iguais.
+- 📦 **Suporte a pacotes comprimidos (`.zip`, `.tgz`, `.tar.gz`):** processamento em memória com validações de segurança para arquivos compactados e descompactados.
+- 🧩 **Reconhecimento automático de gabaritos:** leitura da pasta `gabarito/` dentro do pacote enviado para pareamento automático das soluções com as submissões dos alunos.
+- 🏫 **Agrupamento por turmas e estudantes:** organização hierárquica em árvore no painel lateral (`Turma → Aluno → Questão/Tentativa`).
+- ↔️ **Navegação inteligente entre alunos:** botões **Anterior** e **Próximo** para alternar entre as respostas de diferentes estudantes da mesma questão.
+- ⚡ **Avaliação em tempo real (Fetch API):** atribuição de nota manual de **0 a 10** e justificativa pedagógica com salvamento assíncrono.
+- 📋 **Relatório consolidado de notas (`/Code-Analyzer/relatorio/`):**
+  - página dedicada para visualização de relatórios por turma;
+  - busca em tempo real por nome ou matrícula;
+  - exportação para **PDF** e impressão formatada com `@media print`.
+- 🌙 **Tema escuro/claro sincronizado:** alternância dinâmica persistida em `localStorage` com script executado no `<head>` para evitar cintilação ao navegar ou abrir o relatório.
+
+---
+
+## 🛠️ Stack tecnológica
 
 | Camada | Tecnologia |
 |---|---|
-| Backend | [Python 3.12+](https://www.python.org/) · [Django 6.0](https://www.djangoproject.com/) |
-| Banco de dados | SQLite (`db.sqlite3`) |
-| Frontend | HTML5, CSS3 e JavaScript |
-| Autenticação | Sistema de usuários nativo do Django (`django.contrib.auth`) |
+| **Backend** | Python 3.10+ · Django 6.0+ |
+| **Banco de Dados** | SQLite (`db.sqlite3`) |
+| **Frontend** | HTML5 · CSS3 · JavaScript ES6+ |
+| **Estilização & Ícones** | Bootstrap 5.3.3 · Font Awesome 6.7.2 |
+| **Highlighting de código** | Highlight.js 11.9.0 |
+| **Autenticação** | `django.contrib.auth` (e-mail como `username`) |
 
 ---
 
-## 📁 Estrutura do projeto
+## 📁 Estrutura do repositório
 
-```
-Code-Analyzer/
+```text
+Code-Desk/
 ├── manage.py
 ├── requirements.txt
 ├── db.sqlite3
-├── mysite/                 # Configurações do projeto Django (settings, urls, wsgi/asgi)
-├── code_analyzer/           # App principal: upload/parser de zips, painel de correção
-│   ├── views.py             # Parser de cabeçalho, validações e processamento do .zip
-│   └── templates/code_analyzer.html
-├── usuario/                  # App de autenticação: login, cadastro e logout
+├── LICENSE
+├── media/
+├── mysite/                       # Configurações do projeto Django
+│   ├── settings.py
+│   ├── urls.py
 │   ├── views.py
+│   ├── wsgi.py
+│   └── asgi.py
+├── code_analyzer/               # Aplicação principal de correção e análise
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py
+│   ├── tests.py
+│   ├── urls.py
+│   ├── views.py
+│   ├── migrations/
 │   └── templates/
-├── staticfiles/               # CSS e JS servidos como estáticos
-├── media/                      # Arquivos de mídia enviados/utilizados pela aplicação
-└── Arquivos de teste/            # Script para gerar um .zip de submissões fictícias para teste
-    └── gerar_test.py
+│       ├── code_analyzer.html
+│       └── relatorio.html
+├── usuario/                     # Aplicação de autenticação (login, cadastro, logout)
+│   ├── admin.py
+│   ├── apps.py
+│   ├── models.py
+│   ├── tests.py
+│   ├── urls.py
+│   ├── views.py
+│   ├── migrations/
+│   └── templates/
+│       ├── index.html
+│       └── cadastro.html
+├── staticfiles/                 # Arquivos estáticos e assets do projeto
+│   ├── css/
+│   ├── img/
+│   └── js/
+├── Arquivos de teste/           # Scripts auxiliares para geração de pacotes de teste
+│   ├── gerar_test.py
+│   └── provas_alunos/
+└── README.md
 ```
 
 ---
 
 ## ✅ Pré-requisitos
 
-- [Python 3.12 ou superior](https://www.python.org/downloads/)
-- `pip` (geralmente já vem com o Python)
-- Git (para clonar o repositório)
+- [Python 3.10 ou superior](https://www.python.org/downloads/)
+- `pip` (normalmente incluso com a instalação do Python)
+- Git para clonar o repositório
 
 ---
 
@@ -71,7 +98,7 @@ Code-Analyzer/
 
 ```bash
 git clone https://github.com/joao-Devr/Code-Desk.git
-cd Code-Analyzer
+cd Code-Desk
 ```
 
 ### 2. Criar e ativar um ambiente virtual
@@ -92,21 +119,17 @@ venv\Scripts\Activate.ps1
 
 ### 3. Instalar as dependências
 
-O repositório já inclui um `requirements.txt`:
-
 ```bash
 pip install -r requirements.txt
 ```
 
 ### 4. Aplicar as migrações do banco de dados
 
-Válido tanto para Linux quanto para Windows (dentro do ambiente virtual ativado):
-
 ```bash
 python manage.py migrate
 ```
 
-### 5. Criar um superusuário (opcional, para acessar o `/admin`)
+### 5. Criar um superusuário (opcional)
 
 ```bash
 python manage.py createsuperuser
@@ -120,22 +143,25 @@ python manage.py runserver
 
 O projeto ficará disponível em:
 
-```
+```text
 http://127.0.0.1:8000/
 ```
 
-- `/` — Login (`usuario`)
-- `/cadastro/` — Cadastro de novo professor
-- `/Code-Analyzer/` — Painel principal de correção (requer login)
-- `/admin/` — Administração do Django
+Rotas principais:
+
+- `/` — página de login (`usuario`)
+- `/cadastro/` — cadastro de novo professor
+- `/Code-Analyzer/` — painel principal de correção
+- `/Code-Analyzer/relatorio/` — relatório consolidado
+- `/admin/` — administração do Django
 
 ---
 
-## 📦 Formato esperado do arquivo `.zip` de submissões
+## 📦 Formato esperado do arquivo de submissões
 
-Cada arquivo dentro do `.zip` deve seguir o padrão de nome `a<id_curto>q<questão>t<tentativa>.<extensão>`, por exemplo `a4020q02t01.py`, e conter um cabeçalho em comentário no topo com os metadados do aluno e da submissão:
+Cada arquivo deve seguir o padrão `a<id_curto>q<questão>t<tentativa>.<extensão>`, por exemplo `a4020q02t01.py`, e conter um cabeçalho em comentário no topo com os metadados do aluno e da submissão:
 
-```
+```text
 # Aluno: Nome do Estudante 20221234 (4735)
 # Prova: Prova 3 - Quinta 15 (2669)
 # Questao: 2, 1a tentativa, nota: 3
@@ -147,13 +173,6 @@ Cada arquivo dentro do `.zip` deve seguir o padrão de nome `a<id_curto>q<quest�
 ```
 
 Extensões suportadas: `.c`, `.h`, `.cpp`, `.hpp`, `.py`, `.java`, `.js`, `.ts`, `.txt`.
-
-Para gerar rapidamente um `.zip` de teste nesse formato (com dados fictícios), use o script incluído no projeto:
-
-```bash
-cd "Arquivos de teste"
-python gerar_test.py
-```
 
 ---
 
