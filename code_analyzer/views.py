@@ -36,7 +36,7 @@ PADRAO_NOME_ARQUIVO = re.compile(
 
 PADRAO_ALUNO = re.compile(r'Aluno:\s*(?P<nome>.+?)\s+(?P<matricula>\d+)\s*\((?P<id_curto>\d+)\)\s*$')
 PADRAO_PROVA = re.compile(r'Prova:\s*(?P<prova>.+?)\s*\((?P<prova_id>\d+)\)\s*$')
-PADRAO_QUESTAO = re.compile(r'Questao:\s*(?P<questao>\d+),\s*(?P<tentativa>\d+)a?\s*tentativa,\s*nota:\s*(?P<nota>[\d.,]+)', re.IGNORECASE)
+PADRAO_QUESTAO = re.compile(r'Questao:\s*(?P<questao>\d+),\s*(?P<tentativa>\d+)a?\s*tentativa,\s*nota:\s*(?P<nota>[\d.,]+)', re.IGNORECASE,)
 PADRAO_PROBLEMA = re.compile(r'Problema:\s*(?P<problema>.+?)\s*\((?P<problema_id>\d+)\)\s*$')
 PADRAO_TURMA = re.compile(r'Turma\(s\):\s*(?P<turma>.+?),\s*semestre:\s*(?P<semestre>[\d/]+),\s*e-mail:\s*\[?(?P<email>[\w.\-]+@[\w.\-]+)\]?')
 PADRAO_JUSTIFICATIVA = re.compile(r'Justificativa da nota:\s*(?P<justificativa>.*)$')
@@ -332,8 +332,8 @@ def salvar_avaliacao(request):
     except (ValueError, KeyError, TypeError):
         return JsonResponse({'erro': 'Dados inválidos.'}, status=400)
 
-    if not math.isfinite(nota) or not (0 <= nota <= 10):
-        return JsonResponse({'erro': 'A nota deve estar entre 0 e 10.'}, status=400)
+    if not math.isfinite(nota) or not (0 <= nota <= 100):
+        return JsonResponse({'erro': 'A nota deve estar entre 0 e 100.'}, status=400)
 
     alunos = request.session.get('alunos_salvos')
     aluno = (alunos or {}).get(turma, {}).get(id_aluno)
