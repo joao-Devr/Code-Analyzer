@@ -221,4 +221,13 @@ __marimo__/
 
 # meus ignore
 Diario_de_Contribuicoes.docx
-Arquivos_de_teste
+/Arquivos_de_teste/
+/Venv/
+
+# Arquivos temporarios do sistema e de editores
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+~$*
