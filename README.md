@@ -1,6 +1,6 @@
-# Code-Desk 💻📊
+# Code_Analyzer 💻📊
 
-**Code-Desk** é uma plataforma web desenvolvida em **Django** para automatizar a análise de código, a correção de exercícios de programação e o acompanhamento do desempenho acadêmico.
+**Code_Analyzer** é uma plataforma web desenvolvida em **Django** para automatizar a análise de código, a correção de exercícios de programação e o acompanhamento do desempenho acadêmico.
 
 A ferramenta permite o upload de pacotes de provas em lote (`.zip`, `.tgz`, `.tar.gz`), organiza automaticamente os arquivos por **turmas** e **estudantes**, exibe o código do aluno lado a lado com o gabarito oficial com destaque de sintaxe, e possibilita o lançamento de notas e justificativas com atualização em tempo real e geração de relatórios consolidados.
 
@@ -13,7 +13,7 @@ A ferramenta permite o upload de pacotes de provas em lote (`.zip`, `.tgz`, `.ta
 - 🧩 **Reconhecimento automático de gabaritos:** leitura da pasta `gabarito/` dentro do pacote enviado para pareamento automático das soluções com as submissões dos alunos.
 - 🏫 **Agrupamento por turmas e estudantes:** organização hierárquica em árvore no painel lateral (`Turma → Aluno → Questão/Tentativa`).
 - ↔️ **Navegação inteligente entre alunos:** botões **Anterior** e **Próximo** para alternar entre as respostas de diferentes estudantes da mesma questão.
-- ⚡ **Avaliação em tempo real (Fetch API):** atribuição de nota manual de **0 a 10** e justificativa pedagógica com salvamento assíncrono.
+- ⚡ **Avaliação em tempo real (Fetch API):** atribuição de nota manual de **0 a 100** e justificativa pedagógica com salvamento assíncrono.
 - 📋 **Relatório consolidado de notas (`/Code-Analyzer/relatorio/`):**
   - página dedicada para visualização de relatórios por turma;
   - busca em tempo real por nome ou matrícula;
@@ -38,7 +38,7 @@ A ferramenta permite o upload de pacotes de provas em lote (`.zip`, `.tgz`, `.ta
 ## 📁 Estrutura do repositório
 
 ```text
-Code-Desk/
+Code_Analyzer/
 ├── manage.py
 ├── requirements.txt
 ├── db.sqlite3
@@ -97,8 +97,8 @@ Code-Desk/
 ### 1. Clonar o repositório
 
 ```bash
-git clone https://github.com/joao-Devr/Code-Desk.git
-cd Code-Desk
+git clone https://github.com/joao-Devr/Code-Analyzer.git
+cd Code_Analyzer
 ```
 
 ### 2. Criar e ativar um ambiente virtual

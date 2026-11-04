@@ -253,8 +253,11 @@ if (botaoSalvar) {
             const notaUsuario = document.getElementById('nota-usuario');
             if (notaUsuario) notaUsuario.textContent = dados.nota_final_aluno;
 
+            submissaoAtiva.dataset.notaFinalPreenchida = dados.nota_questao_salva;
             const detalhe = submissaoAtiva.querySelector('.detalhe-submissao');
-            if (detalhe) detalhe.textContent = `nota: ${submissaoAtiva.dataset.notaDredd || '—'} · final: ${notaFinal}`;
+            if (detalhe) {
+                detalhe.innerHTML = `Dredd: ${submissaoAtiva.dataset.notaDredd || '—'} &bull; <strong style="color: var(--cor-azul);">Prof: ${dados.nota_questao_salva}</strong>`;
+            }
 
             botaoSalvar.innerHTML = '<i class="fa-solid fa-check" aria-hidden="true"></i> Salvo!';
             setTimeout(() => { botaoSalvar.innerHTML = htmlOriginalBotao; }, 1500);
